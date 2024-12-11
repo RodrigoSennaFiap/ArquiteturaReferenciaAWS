@@ -1,0 +1,163 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Template para ambiente de teste com recursos free tier'
+
+Parameters:
+  KeyName:
+    Description: Nome da chave SSH
+    Type: AWS::EC2::KeyPair::KeyName
+
+Resources:
+  # VPC e Networking
+  MainVPC:
+    Type: AWS::EC2::VPC
+    DeletionPolicy: Delete
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+      - Key: Name
+        Value: VPC-Principal
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    DeletionPolicy: Delete
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: { "Ref": "MainVPC" }
+      InternetGatewayId: { "Ref": "InternetGateway" }
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: { "Ref": "MainVPC" }
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: sa-east-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: Public-Subnet-1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: { "Ref": "MainVPC" }
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: sa-east-1b
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: Public-Subnet-2
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: { "Ref": "MainVPC" }
+      Tags:
+      - Key: Name
+        Value: Public-RT
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DeletionPolicy: Delete
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: { "Ref": "PublicRouteTable" }
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: { "Ref": "InternetGateway" }
+
+  Subnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DeletionPolicy: Delete
+    Properties:
+      SubnetId: { "Ref": "PublicSubnet1" }
+      RouteTableId: { "Ref": "PublicRouteTable" }
+
+  Subnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DeletionPolicy: Delete
+    Properties:
+      SubnetId: { "Ref": "PublicSubnet2" }
+      RouteTableId: { "Ref": "PublicRouteTable" }
+
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    DeletionPolicy: Delete
+    Properties:
+      GroupDescription: Permitir acesso HTTP
+      VpcId: { "Ref": "MainVPC" }
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+
+  WebServer1:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0af6e9042ea5a4e3e
+      KeyName: { "Ref": "KeyName" }
+      SubnetId: { "Ref": "PublicSubnet1" }
+      SecurityGroupIds:
+      - Ref: WebServerSecurityGroup
+      UserData:
+        Fn::Base64:
+          Fn::Sub: |
+            #!/bin/bash
+            yum update -y
+            yum install -y httpd
+            systemctl start httpd
+            systemctl enable httpd
+            echo "<h1>Servidor Web 1</h1>" > /var/www/html/index.html
+      Tags:
+      - Key: Name
+        Value: WebServer1
+
+  WebServer2:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0af6e9042ea5a4e3e
+      KeyName: { "Ref": "KeyName" }
+      SubnetId: { "Ref": "PublicSubnet2" }
+      SecurityGroupIds:
+      - { "Ref": "WebServerSecurityGroup" }
+      UserData:
+        Fn::Base64:
+          Fn::Sub: |
+            #!/bin/bash
+            yum update -y
+            yum install -y httpd
+            systemctl start httpd
+            systemctl enable httpd
+            echo "<h1>Servidor Web 2</h1>" > /var/www/html/index.html
+      Tags:
+      - Key: Name
+        Value: WebServer2
+
+Outputs:
+  WebServer1PublicIP:
+    Description: IP Público do Servidor Web 1
+    Value:
+      Fn::GetAtt:
+      - WebServer1
+      - PublicIp
+  WebServer2PublicIP:
+    Description: IP Público do Servidor Web 2
+    Value:
+      Fn::GetAtt:
+      - WebServer2
+      - PublicIp
