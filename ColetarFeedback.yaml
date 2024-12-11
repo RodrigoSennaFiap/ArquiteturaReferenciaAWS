@@ -1,0 +1,60 @@
+Resources:
+  FeedbackTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: feedback-table
+      AttributeDefinitions:
+      - AttributeName: feedback_id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: feedback_id
+        KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+      - Key: Environment
+        Value: Dev
+      - Key: Project
+        Value: FeedbackSystem
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: feedback-lambda
+      Runtime: python3.9
+      Handler: app.lambda_handler
+      Code:
+        S3Bucket: your-bucket-name
+        S3Key: your-code-path.zip
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref FeedbackTable
+      Tags:
+      - Key: Environment
+        Value: Dev
+      - Key: Project
+        Value: FeedbackSystem
+
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: feedback-api
+      Tags:
+      - Key: Environment
+        Value: Dev
+      - Key: Project
+        Value: FeedbackSystem
+
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: feedback-admin-pool
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+      Tags:
+      - Key: Environment
+        Value: Dev
+      - Key: Project
+        Value: FeedbackSystem
