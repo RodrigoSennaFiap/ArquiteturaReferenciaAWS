@@ -27,7 +27,7 @@ Resources:
         S3Key: your-code-path.zip
       Environment:
         Variables:
-          TABLE_NAME: !Ref FeedbackTable
+          TABLE_NAME: feedback-table
       Tags:
       - Key: Environment
         Value: Dev
