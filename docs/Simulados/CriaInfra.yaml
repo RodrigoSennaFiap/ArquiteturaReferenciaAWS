@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Stack para provisionar infraestrutura simples no AWS Free Tier para cadastro e exibição de questões.
+
+Resources:
+  MySQLDBInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: SimuladoDB
+      AllocatedStorage: '20'  # Tamanho mínimo no Free Tier
+      DBInstanceClass: db.t2.micro  # Tipo de instância compatível com Free Tier
+      Engine: MySQL
+      EngineVersion: '8.0.28'  # Versão do MySQL
+      MasterUsername: admin
+      MasterUserPassword: admin1234  # Senha hardcoded para simplicidade
+      PubliclyAccessible: true  # Permite conexões externas
+      VPCSecurityGroups:
+        - !Ref SimuladoSecurityGroup
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+      StorageType: gp2
+      DBName: SimuladoDB
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Retain
+    DependsOn: SimuladoSecurityGroup
+    Properties:
+      InstanceType: t2.micro  # Free Tier
+      ImageId: ami-0c55b159cbfafe1f0  # Amazon Linux 2 na Região us-east-1
+      KeyName: SimuladoKeyPair  # Nome fictício da chave
+      SecurityGroupIds:
+        - !Ref SimuladoSecurityGroup
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd php php-mysqlnd git
+          systemctl enable httpd
+          systemctl start httpd
+          cd /var/www/html
+          echo "<h1>Servidor Pronto!</h1>" > index.html
+          git clone https://github.com/SEU_REPOSITORIO.git
+          mv SEU_REPOSITORIO/* .
+          chown -R apache:apache /var/www/html
+          chmod -R 755 /var/www/html
+
+  SimuladoSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    DeletionPolicy: Retain
+    Properties:
+      GroupDescription: Permite HTTP e MySQL
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0  # Permite tráfego HTTP global
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0  # Permite conexões MySQL global (use IP restrito em produção)
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+
+  DBPassword:
+    Type: AWS::SSM::Parameter
+    DeletionPolicy: Retain
+    Properties:
+      Name: /aws-simulado-db-password
+      Type: String
+      Value: admin1234

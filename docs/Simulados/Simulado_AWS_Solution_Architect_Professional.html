@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulado AWS Solution Architect – Professional</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f9f9f9; }
+        .question-container { margin-bottom: 20px; padding: 20px; border: 1px solid #ddd; background: #fff; border-radius: 5px; }
+        .question { font-size: 1.2em; margin-bottom: 10px; }
+        .options { margin-left: 20px; }
+        .reveal { margin-top: 10px; display: none; color: #155724; background: #d4edda; padding: 10px; border: 1px solid #c3e6cb; border-radius: 5px; }
+        .wrong { margin-top: 10px; display: none; color: #721c24; background: #f8d7da; padding: 10px; border: 1px solid #f5c6cb; border-radius: 5px; }
+        button { margin-top: 15px; padding: 10px 20px; font-size: 1em; color: #fff; background: #007bff; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+    <script>
+        function validateAnswer(questionId, correctOption) {
+            const options = document.getElementsByName(`question-${questionId}`);
+            let selectedValue = null;
+            for (const option of options) {
+                if (option.checked) {
+                    selectedValue = option.value;
+                    break;
+                }
+            }
+
+            if (selectedValue === correctOption) {
+                document.getElementById(`reveal-${questionId}`).style.display = 'block';
+                document.getElementById(`wrong-${questionId}`).style.display = 'none';
+            } else {
+                document.getElementById(`reveal-${questionId}`).style.display = 'none';
+                document.getElementById(`wrong-${questionId}`).style.display = 'block';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Simulado AWS Solution Architect – Professional</h1>
+
+    <div class="question-container">
+        <div class="question"><b>Questão 191:</b> Uma organização quer implementar um sistema de armazenamento de dados que seja altamente escalável, ideal para cargas de trabalho de análise. Qual serviço da AWS deve ser utilizado?</div>
+        <div class="options">
+            <input type="radio" name="question-191" value="A"> A. Amazon Redshift<br>
+            <input type="radio" name="question-191" value="B"> B. Amazon RDS<br>
+            <input type="radio" name="question-191" value="C"> C. Amazon DynamoDB<br>
+            <input type="radio" name="question-191" value="D"> D. Amazon S3 Glacier<br>
+        </div>
+        <button onclick="validateAnswer(191, 'A')">Validar</button>
+        <div class="reveal" id="reveal-191">
+            <b>Resposta correta:</b> A. Amazon Redshift<br>
+            <b>Explicação:</b> O Amazon Redshift é um data warehouse altamente escalável, otimizado para cargas de trabalho analíticas com grandes volumes de dados.
+        </div>
+        <div class="wrong" id="wrong-191">
+            Resposta incorreta. Tente novamente!
+        </div>
+    </div>
+
+    <div class="question-container">
+        <div class="question"><b>Questão 192:</b> Uma equipe precisa projetar uma arquitetura para um aplicativo global com baixa latência e alta resiliência. Qual combinação de serviços deve ser usada?</div>
+        <div class="options">
+            <input type="radio" name="question-192" value="A"> A. AWS Global Accelerator e Amazon Route 53<br>
+            <input type="radio" name="question-192" value="B"> B. Amazon CloudFront e AWS Step Functions<br>
+            <input type="radio" name="question-192" value="C"> C. Amazon DynamoDB e AWS Glue<br>
+            <input type="radio" name="question-192" value="D"> D. AWS Elastic Load Balancer e Amazon RDS<br>
+        </div>
+        <button onclick="validateAnswer(192, 'A')">Validar</button>
+        <div class="reveal" id="reveal-192">
+            <b>Resposta correta:</b> A. AWS Global Accelerator e Amazon Route 53<br>
+            <b>Explicação:</b> O AWS Global Accelerator reduz a latência global e melhora a resiliência ao redirecionar tráfego para endpoints disponíveis, enquanto o Amazon Route 53 oferece balanceamento de carga baseado em DNS.
+        </div>
+        <div class="wrong" id="wrong-192">
+            Resposta incorreta. Tente novamente!
+        </div>
+    </div>
+</body>
+</html>
